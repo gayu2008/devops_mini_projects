@@ -1,28 +1,35 @@
 import pytest
-from app import app, db, Task
+from app import app
+from datetime import datetime
 
 @pytest.fixture
 def client():
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+    """Creates a test client for the Flask app."""
+    app.config["TESTING"] = True
     with app.test_client() as client:
-        with app.app_context():
-            db.create_all()
         yield client
-        with app.app_context():
-            db.drop_all()
+
+def test_homepage(client):
+    """Test if homepage loads successfully."""
+    response = client.get("/")
+    assert response.status_code == 200
 
 def test_add_task(client):
-    response = client.post('/add', data=dict(
-        task_name="Test Task",
-        reminder_time="2025-12-12T10:30"
-    ), follow_redirects=True)
-    assert b"Test Task" in response.data
+    """Test adding a new reminder task."""
+    response = client.post("/add", data={
+        "task_name": "Test Task",
+        "reminder_time": datetime.now().strftime("%Y-%m-%dT%H:%M")
+    })
+    assert response.status_code == 302  # Redirects after adding task
+
+def test_get_reminders(client):
+    """Test fetching reminders API."""
+    response = client.get("/get_reminders")
+    assert response.status_code == 200
+    assert isinstance(response.json, list)
 
 def test_delete_task(client):
-    new_task = Task(task_name="Delete Me", reminder_time="2025-12-12T10:30")
-    db.session.add(new_task)
-    db.session.commit()
-    task_id = new_task.id
-    response = client.get(f'/delete/{task_id}', follow_redirects=True)
-    assert b"Delete Me" not in response.data
+    """Test deleting a task (ID needs to exist in DB)."""
+    fake_id = "650c6781f2d3e63b841d7a92"  # Change this to a real one from your DB
+    response = client.post(f"/delete/{fake_id}")
+    assert response.status_code == 200

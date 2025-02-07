@@ -4,46 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reminder App</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <h1>Task Reminder App</h1>
-    <form action="/add" method="POST">
-        <input type="text" name="task_name" placeholder="Enter Task" required>
-        <input type="datetime-local" name="reminder_time" required>
-        <button type="submit">Add Task</button>
-    </form>
+    <h1>Reminder App</h1>
     
-    <h2>Upcoming Tasks</h2>
+    <form action="/add" method="post">
+        <input type="text" name="task_name" placeholder="Enter task" required>
+        <input type="datetime-local" name="reminder_time" required>
+        <button type="submit">Add Reminder</button>
+    </form>
+
+    <h2>Upcoming Reminders</h2>
     <ul>
         {% for task in tasks %}
-            <li>{{ task.task_name }} - {{ task.reminder_time }} 
-                <a href="/delete/{{ task.id }}">Delete</a></li>
+            <li>
+                {{ task.task_name }} - {{ task.reminder_time }}
+                <button class="delete-task" data-id="{{ task._id }}">Delete</button>
+            </li>
         {% endfor %}
     </ul>
 
-    <script>
-        // Get all the task reminder times as a JSON object
-        // const taskTimes = {{ tasks|tojson }};
-        
-        // Function to trigger the alarm
-        function triggerAlarm(taskName) {
-            if (Notification.permission === "granted") {
-                new Notification("Reminder: " + taskName, {
-                    body: "It's time to do your task!"
-                });
-            }
-        }
-
-        // Check every minute if any task's reminder time is due
-        setInterval(() => {
-            const currentTime = new Date();
-            taskTimes.forEach(task => {
-                const reminderTime = new Date(task.reminder_time);
-                if (reminderTime <= currentTime) {
-                    triggerAlarm(task.task_name);
-                }
-            });
-        }, 60000);  // Check every minute
-    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
